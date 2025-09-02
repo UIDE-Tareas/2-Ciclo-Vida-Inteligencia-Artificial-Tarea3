@@ -89,21 +89,54 @@ MODELS_URL = "http://localhost:11434/api/tags"
 MAX_TOKENS = 500
 N_RESULTS = 2
 
+EMBED_FAMILY_MARKERS = {
+    "embed", "nomic-bert", "bge", "gte", "e5", "mpnet",
+    "text-embedding", "voyage-embed", "miniilm-embed"
+}
+NAME_EMBED_MARKERS = ["-embed", "embed-"]
+
+def _is_conversational(model_obj: dict) -> bool:
+    name = model_obj.get("name", "").lower()
+    details = model_obj.get("details", {}) or {}
+    fams = set(map(str.lower, details.get("families", []) or []))
+    fam = (details.get("family") or "").lower()
+    if fam:
+        fams.add(fam)
+
+    # Heurística: si el nombre sugiere embedding, excluir
+    if any(m in name for m in NAME_EMBED_MARKERS):
+        return False
+
+    # Si alguna familia coincide con marcadores de embeddings, excluir
+    if any(f in EMBED_FAMILY_MARKERS for f in fams):
+        return False
+
+    # Si pasó ambos filtros, lo tratamos como conversacional
+    return True
+
 def FetchModels(alert_on_ok=False):
     try:
         response = requests.get(MODELS_URL)
         response.raise_for_status()
         models = response.json().get("models", [])
+
+        conv_models = [m["name"] for m in models if _is_conversational(m)]
+
         if alert_on_ok:
-            messagebox.showinfo("Info", f"Modelos actualizados: \n•{'\n• '.join([model['name'] for model in models])}")
-        return [model["name"] for model in models]
+            messagebox.showinfo(
+                "Info",
+                "Modelos de conversación:\n• " + "\n• ".join(conv_models) if conv_models else
+                "No se encontraron modelos conversacionales."
+            )
+        return conv_models
+
     except requests.RequestException as e:
         messagebox.showerror("Error", f"Error fetching models: {e}")
         return []
     
 
 root = tk.CTk()
-root.title("Chatbot ético - Grupo 5")
+root.title("Chatbot comidas")
 root.geometry("800x800")
 root.configure(bg="#dbd5d5")
 tk.set_appearance_mode("light")
