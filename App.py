@@ -87,7 +87,7 @@ InitializeContext()
 BASE_URL = "http://localhost:11434/api/generate"
 MODELS_URL = "http://localhost:11434/api/tags"
 MAX_TOKENS = 500
-N_RESULTS = 2
+N_RESULTS = 5
 ENABLE_RAG = True
 
 EMBED_FAMILY_MARKERS = {
