@@ -88,6 +88,7 @@ BASE_URL = "http://localhost:11434/api/generate"
 MODELS_URL = "http://localhost:11434/api/tags"
 MAX_TOKENS = 500
 N_RESULTS = 2
+ENABLE_RAG = True
 
 EMBED_FAMILY_MARKERS = {
     "embed", "nomic-bert", "bge", "gte", "e5", "mpnet",
@@ -261,13 +262,14 @@ def get_ai_response():
     chat_frame._parent_canvas.yview_moveto(1.0)
 
     root.update_idletasks()
+    context = "\n"
 
-    results = dbCollection.query(
-        query_texts=[user_input],
-        n_results=N_RESULTS
-    )
-
-    context = "\n".join(results["documents"][0])
+    if(ENABLE_RAG == True):
+        results = dbCollection.query(
+            query_texts=[user_input],
+            n_results=N_RESULTS
+        )
+        context = "\n".join(results["documents"][0])
     modified_prompt = ProcessPrompt(user_input, context)
     print(modified_prompt)
     selected_model = modelStringvar.get()
